@@ -8,42 +8,27 @@
 <h1 align="center">Vorssaint</h1>
 
 <p align="center">
-  One menu bar icon doing the job of a dozen paid Mac apps.<br>
+  A privacy-first macOS menu bar toolkit — with focused conference-audio and
+  external-display improvements in this community fork.<br>
   Free, open source, and everything runs on your Mac.
 </p>
 
 <p align="center">
-  <a href="https://vorssaint.com">Website</a> ·
-  <a href="#install">Install</a> ·
+  <a href="https://github.com/Edyx0/vorssaint-utils-facetime/archive/refs/heads/main.zip"><strong>Download source ZIP</strong></a> ·
+  <a href="#download-and-build">Download &amp; Build</a> ·
+  <a href="#fork-changes">Fork changes</a> ·
   <a href="#everything-it-does">Features</a> ·
   <a href="#private-by-default">Privacy</a> ·
   <a href="CHANGELOG.md">Changelog</a> ·
-  <a href="mailto:hello@vorssaint.com">Contact</a> ·
-  <a href="https://buymeacoffee.com/vorssaint">Buy Me a Coffee</a>
+  <a href="https://github.com/Edyx0/vorssaint-utils-facetime/issues">Support</a>
 </p>
 
 <p align="center">
-  <a href="https://github.com/vorssaint/vorssaint-utils/releases"><img src="https://img.shields.io/github/v/release/vorssaint/vorssaint-utils?label=release&color=4c8dff" alt="Latest release"></a>
-  <a href="https://github.com/vorssaint/vorssaint-utils/releases"><img src="https://img.shields.io/github/downloads/vorssaint/vorssaint-utils/total?color=4c8dff" alt="Downloads"></a>
-  <a href="https://github.com/vorssaint/vorssaint-utils/actions/workflows/ci.yml"><img src="https://github.com/vorssaint/vorssaint-utils/actions/workflows/ci.yml/badge.svg?branch=main&event=push" alt="CI status"></a>
+  <a href="https://github.com/Edyx0/vorssaint-utils-facetime/archive/refs/heads/main.zip"><img src="https://img.shields.io/badge/download-source%20ZIP-4c8dff" alt="Download source ZIP"></a>
+  <a href="https://github.com/Edyx0/vorssaint-utils-facetime/actions/workflows/ci.yml"><img src="https://github.com/Edyx0/vorssaint-utils-facetime/actions/workflows/ci.yml/badge.svg?branch=main&event=push" alt="CI status"></a>
+  <a href="https://github.com/Edyx0/vorssaint-utils-facetime/stargazers"><img src="https://img.shields.io/github/stars/Edyx0/vorssaint-utils-facetime?style=flat" alt="GitHub stars"></a>
   <a href="#what-you-need"><img src="https://img.shields.io/badge/macOS-14%2B%20Apple%20Silicon-black" alt="macOS 14 and newer, Apple Silicon"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0--or--later-blue" alt="License GPL 3.0 or later"></a>
-</p>
-
-<p align="center">
-  <a href="https://discord.gg/M6BwWH4BJp">
-    <img src="docs/assets/readme/discord-symbol.svg" width="72" alt="Discord">
-  </a>
-</p>
-
-<p align="center">
-  For anything private, email
-  <a href="mailto:hello@vorssaint.com"><strong>hello@vorssaint.com</strong></a>.
-</p>
-
-<p align="center">
-  <a href="https://trendshift.io/repositories/53716?utm_source=repository-badge&amp;utm_medium=badge&amp;utm_campaign=badge-repository-53716" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/repositories/53716" alt="vorssaint/vorssaint-utils | Trendshift" width="250" height="55"></a>
-  <a href="https://trendshift.io/repositories/53716?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-53716" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/trendshift/repositories/53716/weekly?language=Swift" alt="vorssaint/vorssaint-utils | Trendshift weekly ranking" width="250" height="55"></a>
 </p>
 
 <p align="center">
@@ -54,6 +39,29 @@
 </p>
 
 Per app volume, a real system monitor, a better app switcher, window snapping, Dock previews, clipboard history, text snippets, a file shelf, an uninstaller. The utilities Mac users usually buy one by one, together behind a single menu bar icon, with no account, no telemetry and no subscription.
+
+## Fork changes
+
+This community fork focuses on reliable audio controls where macOS exposes
+conference media through a shared system process rather than through the
+calling app itself.
+
+- **Live conference-audio source.** An active `avconferenced` output process
+  appears as a temporary **Conference audio** row. It is deliberately not
+  labelled FaceTime: macOS can share that daemon with other conferencing
+  features.
+- **Conservative ownership.** Audio helpers join an app only when the
+  responsibility chain, parent chain, or one exact live bundle owner proves the
+  association. Shared or ambiguous processes are never misattributed.
+- **External-display safety.** The source control changes only its process-tap
+  gain. It does not write the Dell display's hardware controls, DDC state,
+  system output volume, or microphone settings.
+- **Session-only control.** Conference audio has no per-output picker and its
+  volume is not persisted after the shared daemon goes idle.
+
+See [the technical verification notes](docs/FACETIME-AUDIO-FIX.md) for the
+observed Core Audio ownership model, test evidence, and the remaining live-call
+acceptance check.
 
 ## Install only what you use
 
@@ -71,7 +79,7 @@ The rest bends the same way: panel sections reorder and hide, the compact layout
 
 ### Sound
 
-- **Volume mixer.** Adjust the Mac's overall volume or slide any single app up or down, enter an exact percentage, and push a quiet one past 100 percent when a video is just too low. Send system sounds through another output, or hide the apps you never adjust to keep the list short. No audio driver, no setup.
+- **Volume mixer.** Adjust the Mac's overall volume or slide any single app up or down, enter an exact percentage, and push a quiet one past 100 percent when a video is just too low. Send system sounds through another output, or hide the apps you never adjust to keep the list short. When macOS exposes live conference media through its shared service, this fork shows it as a temporary source instead of falsely assigning it to FaceTime. No audio driver, no setup.
 - **Per app output.** Send your music to the speakers and a call to your headset at the same time.
 - **Output switcher.** Cycle between chosen outputs with one shortcut, and drop the volume automatically when headphones disconnect.
 - **Microphone tools.** Pin your favorite input so the Mac stops guessing, and mute every microphone at once with a click or shortcut, whichever one an app is using.
@@ -212,11 +220,15 @@ The shelf and almost every quick toggle need no permission at all. Finder cut an
 - A Mac with Apple Silicon
 - macOS 14 Sonoma or newer
 
-### Build it yourself
+## Download and build
+
+[Download the current source as a ZIP](https://github.com/Edyx0/vorssaint-utils-facetime/archive/refs/heads/main.zip), extract it, then run the build below. This fork does not currently publish a signed binary release; building locally is the supported download path.
+
+### Build from source
 
 ```sh
-git clone https://github.com/vorssaint/vorssaint-utils.git
-cd vorssaint-utils
+git clone https://github.com/Edyx0/vorssaint-utils-facetime.git
+cd vorssaint-utils-facetime
 ./build.sh            # compile, generate the icon, assemble the signed bundle
 ./build.sh --install  # the same, then install into Applications and launch
 ```
@@ -232,15 +244,16 @@ The [troubleshooting guide](docs/TROUBLESHOOTING.md) walks through the common ca
 - [Privacy](docs/PRIVACY.md), what does and does not leave your Mac
 - [Permissions](docs/PERMISSIONS.md), every macOS permission in plain words
 - [Troubleshooting](docs/TROUBLESHOOTING.md), the common fixes
+- [Conference audio handling](docs/FACETIME-AUDIO-FIX.md), source attribution, Dell test evidence, and live-call acceptance steps
 - [Contributing](CONTRIBUTING.md), build, layout and conventions
 - [Support](SUPPORT.md), where to get help
 - [Security](SECURITY.md), how to report a vulnerability
 
 ## Community
 
-Vorssaint went from first commit to the front of GitHub trending in three days, top of the Swift charts, and issues and pull requests have shaped every release since. Bug reports, feature ideas and translations are all welcome, starting from the [contributing guide](CONTRIBUTING.md).
-
-Vorssaint is free and will stay that way. If it earned its place in your menu bar, a star helps other people find it, and a [coffee](https://buymeacoffee.com/vorssaint) keeps the maintainer awake, with or without the Keep awake feature.
+This is an independent community fork. Report reproducible bugs and feature
+requests in [GitHub Issues](https://github.com/Edyx0/vorssaint-utils-facetime/issues),
+and start code contributions with the [contributing guide](CONTRIBUTING.md).
 
 ## Acknowledgements
 
@@ -249,7 +262,3 @@ Vorssaint is free and will stay that way. If it earned its place in your menu ba
 ## License
 
 [GPL 3.0 or later](LICENSE), copyright 2026 Vorssaint. The license covers the source code; the Vorssaint name, logo and look are covered separately in [TRADEMARKS.md](TRADEMARKS.md).
-
-<p align="center">
-  <sub>Made by <a href="https://x.com/vorssaint">@vorssaint</a></sub>
-</p>
