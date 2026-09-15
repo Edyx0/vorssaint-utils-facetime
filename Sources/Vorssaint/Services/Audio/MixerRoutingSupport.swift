@@ -27,6 +27,15 @@ struct MixerRowIdentity: Equatable {
     let persistenceID: String?
 }
 
+/// A live system audio source deliberately shown without attributing it to a
+/// regular app. Its session-only identity prevents a shared daemon from being
+/// mistaken for FaceTime (or any other client) and prevents preferences from
+/// surviving the daemon's next use.
+struct MixerTransientSystemAudioSource: Equatable {
+    let rowID: String
+    let name: String
+}
+
 /// Decides which engine build may be installed when it lands.
 ///
 /// Building a tap takes tens of milliseconds off the main thread, and the
@@ -522,6 +531,22 @@ enum MixerRoutingSupport {
               !bundleIdentifier.isEmpty else { return nil }
         let candidates = Set(regularAppPidsForBundleIdentifier(bundleIdentifier).filter { $0 > 0 })
         return candidates.count == 1 ? candidates.first : nil
+    }
+
+    /// `avconferenced` is a shared Apple conference-media daemon. Core Audio
+    /// can report it as an active output client while it has no responsibility
+    /// or parent-chain link to a regular app. Expose that *live source* as a
+    /// session-only row, never as a row named after FaceTime: the same daemon
+    /// may be used by other system conferencing features.
+    static func transientSystemAudioSource(bundleIdentifier: String?,
+                                           isRunningOutput: Bool) -> MixerTransientSystemAudioSource? {
+        guard isRunningOutput,
+              bundleIdentifier?.trimmingCharacters(in: .whitespacesAndNewlines)
+                .caseInsensitiveCompare("com.apple.avconferenced") == .orderedSame else {
+            return nil
+        }
+        return MixerTransientSystemAudioSource(rowID: "system:conference-audio",
+                                               name: "Conference audio")
     }
 
     static func needsPersistentFinderRow(showFinder: Bool, hasFinderRow: Bool) -> Bool {

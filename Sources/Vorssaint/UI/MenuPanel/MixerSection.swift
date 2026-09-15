@@ -745,7 +745,7 @@ private struct MixerRow: View {
 
                     Spacer(minLength: 4)
 
-                    if !app.isBypassed {
+                    if !app.isBypassed && app.allowsOutputRouting {
                         outputPicker
                     }
                 }

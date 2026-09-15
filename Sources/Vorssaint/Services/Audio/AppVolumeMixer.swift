@@ -39,6 +39,10 @@ struct MixerApp: Identifiable, Equatable {
     /// absence doesn't read as a bug (issue #177), but never tapped — no
     /// slider, no routing, volume pinned at unity.
     var isBypassed: Bool = false
+    /// A shared system source is controllable only while it is live. It never
+    /// exposes per-output routing, because that would change the route of a
+    /// daemon shared by more than one conferencing feature.
+    var allowsOutputRouting: Bool = true
     var selectedOutputDeviceUID: String?
     var effectiveOutputDeviceUID: String?
     var outputDeviceUnavailable: Bool
@@ -550,7 +554,7 @@ final class AppVolumeMixer: ObservableObject {
     }
 
     func setOutputDeviceUID(_ uid: String?, for app: MixerApp) {
-        guard !app.isBypassed else { return }
+        guard !app.isBypassed, app.allowsOutputRouting else { return }
         engineRecovery.clear(app.id)
         let sanitized = Defaults.sanitizedAppOutputDeviceUID(uid)
         persistOutputDeviceUID(sanitized, for: app)
@@ -1010,6 +1014,9 @@ final class AppVolumeMixer: ObservableObject {
         var playing: Set<pid_t> = []
         var bypassed: Set<pid_t> = []
         var bundleHints: [pid_t: String] = [:]
+        var transientSources: [(source: MixerTransientSystemAudioSource,
+                                pid: pid_t,
+                                object: AudioObjectID)] = []
         let processObjects = audioProcessObjects()
         for object in processObjects {
             var pid: pid_t = -1
@@ -1019,10 +1026,20 @@ final class AppVolumeMixer: ObservableObject {
             // the ones making sound this instant, so apps are adjustable before
             // they play and stay put between sounds.
             let audioBundleIdentifier = Self.processBundleIdentifier(of: object)
+            var running: UInt32 = 0
+            _ = Self.read(object, kAudioProcessPropertyIsRunningOutput, &running)
             guard let app = ResponsibleProcess.regularAppOwner(
                 of: pid,
                 audioProcessBundleIdentifier: audioBundleIdentifier
-            ) else { continue }
+            ) else {
+                if let source = MixerRoutingSupport.transientSystemAudioSource(
+                    bundleIdentifier: audioBundleIdentifier,
+                    isRunningOutput: running != 0
+                ) {
+                    transientSources.append((source, pid, object))
+                }
+                continue
+            }
             let owner = app.processIdentifier
             let name = ResponsibleProcess.displayName(pid: owner, fallback: app.localizedName ?? "pid \(owner)")
             // Bypassed apps (Zoom, DAWs) still get a row — hiding them read
@@ -1034,8 +1051,6 @@ final class AppVolumeMixer: ObservableObject {
                 bypassed.insert(owner)
             }
 
-            var running: UInt32 = 0
-            _ = Self.read(object, kAudioProcessPropertyIsRunningOutput, &running)
             if running != 0 { playing.insert(owner) }
 
             groups[owner, default: []].append(object)
@@ -1084,6 +1099,23 @@ final class AppVolumeMixer: ObservableObject {
                                  volume: isBypassed ? 1 : (storedVolume(for: identity,
                                                                        saved: saved,
                                                                        session: request.sessionVolumes) ?? 1)))
+        }
+        for transient in transientSources {
+            let identity = MixerRowIdentity(rowID: transient.source.rowID,
+                                            persistenceID: nil)
+            next.append(MixerApp(id: identity.rowID,
+                                 persistenceID: nil,
+                                 ownerPid: transient.pid,
+                                 name: transient.source.name,
+                                 audioObjects: [transient.object],
+                                 isPlaying: true,
+                                 allowsOutputRouting: false,
+                                 selectedOutputDeviceUID: nil,
+                                 effectiveOutputDeviceUID: defaultUID,
+                                 outputDeviceUnavailable: false,
+                                 volume: storedVolume(for: identity,
+                                                      saved: saved,
+                                                      session: request.sessionVolumes) ?? 1))
         }
         if MixerRoutingSupport.needsPersistentFinderRow(
             showFinder: showFinder,
@@ -1144,6 +1176,8 @@ final class AppVolumeMixer: ObservableObject {
                                      name: existing.name,
                                      audioObjects: audioObjects,
                                      isPlaying: existing.isPlaying || app.isPlaying,
+                                     isBypassed: existing.isBypassed || app.isBypassed,
+                                     allowsOutputRouting: existing.allowsOutputRouting && app.allowsOutputRouting,
                                      selectedOutputDeviceUID: existing.selectedOutputDeviceUID,
                                      effectiveOutputDeviceUID: existing.effectiveOutputDeviceUID,
                                      outputDeviceUnavailable: existing.outputDeviceUnavailable,

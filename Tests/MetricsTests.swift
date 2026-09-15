@@ -7697,6 +7697,22 @@ struct MetricsTests {
         expect(resolvedOwningApp(responsible: 700, pid: 700,
                                  audioBundleIdentifier: "com.example.shared-audio") == nil,
                "an unowned helper audio object remains outside an app row")
+        expect(MixerRoutingSupport.transientSystemAudioSource(
+            bundleIdentifier: "com.apple.avconferenced",
+            isRunningOutput: true
+        ) == MixerTransientSystemAudioSource(rowID: "system:conference-audio",
+                                             name: "Conference audio"),
+               "an active shared conference daemon is shown as its own source, not as FaceTime")
+        expect(MixerRoutingSupport.transientSystemAudioSource(
+            bundleIdentifier: "com.apple.avconferenced",
+            isRunningOutput: false
+        ) == nil,
+               "an idle shared conference daemon adds no stale mixer row")
+        expect(MixerRoutingSupport.transientSystemAudioSource(
+            bundleIdentifier: "com.apple.FaceTime",
+            isRunningOutput: true
+        ) == nil,
+               "a regular app bundle never becomes a shared-system source")
         expect(resolvedOwningApp(responsible: 700, pid: 700,
                                  audioBundleIdentifier: "com.example.call",
                                  bundleOwners: ["com.example.call": [101]],
