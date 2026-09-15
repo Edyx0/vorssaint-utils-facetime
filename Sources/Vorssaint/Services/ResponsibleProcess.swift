@@ -33,21 +33,25 @@ enum ResponsibleProcess {
 
     /// The regular app to bill the process to, following the parent chain
     /// when the responsibility API dead-ends on a helper that answers for
-    /// itself (browser audio helpers, issue #256). Nil when no ancestor is
-    /// a regular app — daemons and login items stay unlisted.
-    static func regularAppOwner(of pid: pid_t) -> NSRunningApplication? {
+    /// itself (browser audio helpers, issue #256). An otherwise-unowned helper
+    /// is considered only when its live Core Audio object names one regular-app
+    /// bundle; daemons and ambiguous services stay unlisted.
+    static func regularAppOwner(of pid: pid_t,
+                                audioProcessBundleIdentifier: String? = nil) -> NSRunningApplication? {
         let responsible = owner(of: pid)
         let isRegular: (pid_t) -> Bool = { NSRunningApplication(processIdentifier: $0)?.activationPolicy == .regular }
         let parent: (pid_t) -> pid_t = parent(of:)
-        let resolved = MixerRoutingSupport.owningRegularAppPid(
+        let resolved = MixerRoutingSupport.regularAppOwnerPid(
+            processPid: pid,
             responsiblePid: responsible,
             isRegularApp: isRegular,
-            parentPid: parent
-        ) ?? (responsible != pid ? MixerRoutingSupport.owningRegularAppPid(
-            responsiblePid: pid,
-            isRegularApp: isRegular,
-            parentPid: parent
-        ) : nil)
+            parentPid: parent,
+            audioProcessBundleIdentifier: audioProcessBundleIdentifier,
+            regularAppPidsForBundleIdentifier: { bundleIdentifier in
+                NSRunningApplication.runningApplications(withBundleIdentifier: bundleIdentifier)
+                    .compactMap { $0.activationPolicy == .regular ? $0.processIdentifier : nil }
+            }
+        )
         return resolved.flatMap(NSRunningApplication.init(processIdentifier:))
     }
 

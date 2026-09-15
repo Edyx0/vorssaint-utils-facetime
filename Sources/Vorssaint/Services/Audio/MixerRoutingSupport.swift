@@ -495,6 +495,35 @@ enum MixerRoutingSupport {
         return nil
     }
 
+    /// Resolves the regular app that owns a live Core Audio process. A normal
+    /// responsibility or parent-chain result wins. When neither identifies an
+    /// app, the HAL-reported bundle identifier may recover an app-owned helper,
+    /// but only when it names exactly one currently-running regular app.
+    static func regularAppOwnerPid(processPid: pid_t,
+                                   responsiblePid: pid_t,
+                                   isRegularApp: (pid_t) -> Bool,
+                                   parentPid: (pid_t) -> pid_t,
+                                   audioProcessBundleIdentifier: String?,
+                                   regularAppPidsForBundleIdentifier: (String) -> [pid_t]) -> pid_t? {
+        guard processPid > 0 else { return nil }
+        if let owner = owningRegularAppPid(responsiblePid: responsiblePid,
+                                           isRegularApp: isRegularApp,
+                                           parentPid: parentPid) {
+            return owner
+        }
+        if responsiblePid != processPid,
+           let owner = owningRegularAppPid(responsiblePid: processPid,
+                                           isRegularApp: isRegularApp,
+                                           parentPid: parentPid) {
+            return owner
+        }
+        guard let bundleIdentifier = audioProcessBundleIdentifier?
+            .trimmingCharacters(in: .whitespacesAndNewlines),
+              !bundleIdentifier.isEmpty else { return nil }
+        let candidates = Set(regularAppPidsForBundleIdentifier(bundleIdentifier).filter { $0 > 0 })
+        return candidates.count == 1 ? candidates.first : nil
+    }
+
     static func needsPersistentFinderRow(showFinder: Bool, hasFinderRow: Bool) -> Bool {
         showFinder && !hasFinderRow
     }

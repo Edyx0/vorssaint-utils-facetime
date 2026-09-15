@@ -7668,21 +7668,40 @@ struct MetricsTests {
                "a regular app within the depth cap is still found")
         expect(owningApp(of: 0) == nil,
                "a missing responsible pid maps to no app")
-        func resolvedOwningApp(responsible: pid_t, pid: pid_t, regularApps: Set<pid_t> = [100]) -> pid_t? {
+        func resolvedOwningApp(responsible: pid_t, pid: pid_t,
+                               audioBundleIdentifier: String? = nil,
+                               bundleOwners: [String: [pid_t]] = [:],
+                               regularApps: Set<pid_t> = [100]) -> pid_t? {
             let isRegular: (pid_t) -> Bool = { regularApps.contains($0) }
             let parent: (pid_t) -> pid_t = { helperParents[$0] ?? 0 }
-            return MixerRoutingSupport.owningRegularAppPid(
+            return MixerRoutingSupport.regularAppOwnerPid(
+                processPid: pid,
                 responsiblePid: responsible,
                 isRegularApp: isRegular,
-                parentPid: parent
-            ) ?? (responsible != pid ? MixerRoutingSupport.owningRegularAppPid(
-                responsiblePid: pid,
-                isRegularApp: isRegular,
-                parentPid: parent
-            ) : nil)
+                parentPid: parent,
+                audioProcessBundleIdentifier: audioBundleIdentifier,
+                regularAppPidsForBundleIdentifier: { bundleOwners[$0] ?? [] }
+            )
         }
         expect(resolvedOwningApp(responsible: 700, pid: 500) == 100,
                "a helper whose responsibility returns a daemon still falls back to its parent app")
+        expect(resolvedOwningApp(responsible: 700, pid: 700,
+                                 audioBundleIdentifier: "com.example.call",
+                                 bundleOwners: ["com.example.call": [100]]) == 100,
+               "an unparented live audio object joins its one exact regular-app bundle owner")
+        expect(resolvedOwningApp(responsible: 700, pid: 700,
+                                 audioBundleIdentifier: "com.example.shared-audio",
+                                 bundleOwners: ["com.example.shared-audio": [100, 101]],
+                                 regularApps: [100, 101]) == nil,
+               "an audio bundle with more than one regular-app owner is never claimed")
+        expect(resolvedOwningApp(responsible: 700, pid: 700,
+                                 audioBundleIdentifier: "com.example.shared-audio") == nil,
+               "an unowned helper audio object remains outside an app row")
+        expect(resolvedOwningApp(responsible: 700, pid: 700,
+                                 audioBundleIdentifier: "com.example.call",
+                                 bundleOwners: ["com.example.call": [101]],
+                                 regularApps: [101]) == 101,
+               "a refreshed process snapshot follows the current app pid instead of retaining the old one")
         expect(!MixerRoutingSupport.requiresEngine(volume: 1,
                                                    selectedOutputDeviceUID: nil,
                                                    targetOutputDeviceUID: "BuiltInSpeakerDevice",
@@ -8586,6 +8605,14 @@ struct MetricsTests {
             break
         }
         expect(stereoMatches, "a stereo device still gets a plain scaled copy")
+        let mutedStereo = rendered(source: [0.25, -0.5, 0.75, -1], sourceChannels: 2,
+                                   outputs: [(channels: 2, frames: 2)], gain: 0)[0]
+        expect(mutedStereo == [0, 0, 0, 0],
+               "zero app gain writes silence without changing the system output")
+        let unityStereo = rendered(source: [0.25, -0.5, 0.75, -1], sourceChannels: 2,
+                                  outputs: [(channels: 2, frames: 2)], gain: 1)[0]
+        expect(unityStereo == [0.25, -0.5, 0.75, -1],
+               "unity app gain leaves the replay samples unchanged")
 
         let toSurround = rendered(source: [1, 2, 3, 4], sourceChannels: 2,
                                   outputs: [(channels: 4, frames: 2)])[0]

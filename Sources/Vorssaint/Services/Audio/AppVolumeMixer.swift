@@ -1018,7 +1018,11 @@ final class AppVolumeMixer: ObservableObject {
             // Show every regular app that holds an audio connection, not only
             // the ones making sound this instant, so apps are adjustable before
             // they play and stay put between sounds.
-            guard let app = ResponsibleProcess.regularAppOwner(of: pid) else { continue }
+            let audioBundleIdentifier = Self.processBundleIdentifier(of: object)
+            guard let app = ResponsibleProcess.regularAppOwner(
+                of: pid,
+                audioProcessBundleIdentifier: audioBundleIdentifier
+            ) else { continue }
             let owner = app.processIdentifier
             let name = ResponsibleProcess.displayName(pid: owner, fallback: app.localizedName ?? "pid \(owner)")
             // Bypassed apps (Zoom, DAWs) still get a row — hiding them read
@@ -1041,7 +1045,7 @@ final class AppVolumeMixer: ObservableObject {
                 // For a helper that plays on an app's behalf the owner found
                 // above is the app, and its bundle id is the one that counts.
                 bundleHints[owner] = app.bundleIdentifier
-                    ?? (pid == owner ? Self.processBundleIdentifier(of: object) : nil)
+                    ?? audioBundleIdentifier
             }
         }
 
