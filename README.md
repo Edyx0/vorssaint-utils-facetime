@@ -5,17 +5,17 @@
   </picture>
 </p>
 
-<h1 align="center">Vorssaint</h1>
+<h1 align="center">Vorssaint — FaceTime Audio Edition</h1>
 
 <p align="center">
-  A privacy-first macOS menu bar toolkit — with focused conference-audio and
-  external-display improvements in this community fork.<br>
+  A community macOS build focused on FaceTime and conference-audio controls,
+  with safe external-display routing.<br>
   Free, open source, and everything runs on your Mac.
 </p>
 
 <p align="center">
-  <a href="https://github.com/Edyx0/vorssaint-utils-facetime/archive/refs/heads/main.zip"><strong>Download source ZIP</strong></a> ·
-  <a href="#download-and-build">Download &amp; Build</a> ·
+  <a href="https://github.com/Edyx0/vorssaint-utils-facetime/archive/refs/heads/main.zip"><strong>Download this FaceTime fork</strong></a> ·
+  <a href="#download-this-facetime-build">Download &amp; Build</a> ·
   <a href="#fork-changes">Fork changes</a> ·
   <a href="#everything-it-does">Features</a> ·
   <a href="#private-by-default">Privacy</a> ·
@@ -24,7 +24,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Edyx0/vorssaint-utils-facetime/archive/refs/heads/main.zip"><img src="https://img.shields.io/badge/download-source%20ZIP-4c8dff" alt="Download source ZIP"></a>
+  <a href="https://github.com/Edyx0/vorssaint-utils-facetime/archive/refs/heads/main.zip"><img src="https://img.shields.io/badge/download-FaceTime%20Audio%20Edition-4c8dff" alt="Download FaceTime Audio Edition"></a>
   <a href="https://github.com/Edyx0/vorssaint-utils-facetime/actions/workflows/ci.yml"><img src="https://github.com/Edyx0/vorssaint-utils-facetime/actions/workflows/ci.yml/badge.svg?branch=main&event=push" alt="CI status"></a>
   <a href="https://github.com/Edyx0/vorssaint-utils-facetime/stargazers"><img src="https://img.shields.io/github/stars/Edyx0/vorssaint-utils-facetime?style=flat" alt="GitHub stars"></a>
   <a href="#what-you-need"><img src="https://img.shields.io/badge/macOS-14%2B%20Apple%20Silicon-black" alt="macOS 14 and newer, Apple Silicon"></a>
@@ -39,6 +39,11 @@
 </p>
 
 Per app volume, a real system monitor, a better app switcher, window snapping, Dock previews, clipboard history, text snippets, a file shelf, an uninstaller. The utilities Mac users usually buy one by one, together behind a single menu bar icon, with no account, no telemetry and no subscription.
+
+> **This is the FaceTime Audio Edition.** Download from this repository to get
+> its conference-audio and external-display changes. The upstream release page
+> and the Homebrew cask are separate distributions and do not include this
+> fork's work.
 
 ## Fork changes
 
@@ -164,25 +169,17 @@ The rest bends the same way: panel sections reorder and hide, the compact layout
 - **Extra brightness.** Pushes the XDR panel of a MacBook Pro past its regular maximum using the display's HDR headroom. Toggle it from the Displays panel or Settings.
 - **Bluetooth on sleep.** Switches Bluetooth off while the Mac sleeps, so a laptop in a bag stops stealing the headphones you are listening to elsewhere. Bluetooth you had already turned off stays off, and only what Vorssaint switched off comes back on wake.
 
-## Install
+## Download this FaceTime build
 
-With [Homebrew](https://brew.sh):
+[Download the current FaceTime Audio Edition as a ZIP](https://github.com/Edyx0/vorssaint-utils-facetime/archive/refs/heads/main.zip), extract it, then build it locally with the steps below. The ZIP always follows this repository's `main` branch.
 
-```sh
-brew install --cask vorssaint
-```
-
-Or grab the disk image from the [releases page](https://github.com/vorssaint/vorssaint-utils/releases) and drag Vorssaint into Applications.
-
-Builds are signed with an Apple Developer ID and notarized, so macOS opens them without a fuss and your permissions survive updates.
+This fork does not publish a separately signed binary release. Do **not** use
+the upstream disk image or `brew install --cask vorssaint` when you need the
+FaceTime audio changes: those install the original distribution instead.
 
 ## Uninstall
 
-With Homebrew:
-
-```sh
-brew uninstall --cask vorssaint
-```
+To remove a local installation of this fork:
 
 To remove Vorssaint completely, including its settings and permissions:
 
@@ -220,11 +217,7 @@ The shelf and almost every quick toggle need no permission at all. Finder cut an
 - A Mac with Apple Silicon
 - macOS 14 Sonoma or newer
 
-## Download and build
-
-[Download the current source as a ZIP](https://github.com/Edyx0/vorssaint-utils-facetime/archive/refs/heads/main.zip), extract it, then run the build below. This fork does not currently publish a signed binary release; building locally is the supported download path.
-
-### Build from source
+### Build and install from source
 
 ```sh
 git clone https://github.com/Edyx0/vorssaint-utils-facetime.git
@@ -233,7 +226,7 @@ cd vorssaint-utils-facetime
 ./build.sh --install  # the same, then install into Applications and launch
 ```
 
-Xcode Command Line Tools are the only requirement. The [contributing guide](CONTRIBUTING.md) covers the layout and conventions. Official builds come only from the maintainer: the GPL covers the source, while the Vorssaint name, icon and look are covered by [TRADEMARKS.md](TRADEMARKS.md), so forks need their own identity.
+Xcode Command Line Tools are the only requirement. The [contributing guide](CONTRIBUTING.md) covers the layout and conventions. This fork's current source ZIP and `main` branch are the supported FaceTime Audio Edition download; upstream packages may not contain these changes. The GPL covers the source, while the Vorssaint name, icon and look are covered by [TRADEMARKS.md](TRADEMARKS.md).
 
 ## When something misbehaves
 
